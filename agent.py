@@ -1,17 +1,16 @@
 # agent.py
-from langchain_openai import ChatOpenAI
-from langchain_community.vectorstores import Pinecone as LangchainPinecone
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_pinecone import PineconeVectorStore
 from langchain.tools import tool
-from pinecone import Pinecone
 from langchain.agents import create_agent
+from pinecone import Pinecone
 import os
 
 # Setup
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=512)
 
-vector_store = LangchainPinecone.from_existing_index("crowedemo", embeddings)
+vector_store = PineconeVectorStore(index=pc.Index("crowedemo"), embedding=embeddings)
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 @tool(response_format="content_and_artifact")
@@ -36,7 +35,7 @@ prompt = """You are a helpful assistant with access to a knowledge base.
     If you don't know the answer, say so - don't make things up."""
 
 tools = [retrieve_context, calc]
-agent = create_agent(llm, tools, prompt=prompt, name='crowedemo-agent')
+agent = create_agent(llm, tools, system_prompt=prompt, name='crowedemo-agent')
 def chat(message, history=[]):
     """Run the agent"""
     messages = history + [("user", message)]
