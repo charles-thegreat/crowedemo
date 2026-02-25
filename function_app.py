@@ -5,7 +5,7 @@ from agent import chat
 app = func.FunctionApp()
 
 
-@app.route(route="chat", methods=["POST"])
+@app.route(route="chat", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 def chat_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     try:
         body = req.get_json()
